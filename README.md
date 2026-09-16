@@ -144,11 +144,19 @@ first call.
 
 ### Give the agent a role
 
+With the plugin, set `CROQUI_AGENT_ROLE` when you start Claude Code:
+
+```bash
+CROQUI_AGENT_ROLE=Designer claude
+```
+
+With the MCP server only, put the role on the URL:
+
 ```bash
 claude mcp add --transport http croqui "https://croqui.dev/mcp?as=Designer"
 ```
 
-The role becomes the agent's label and color next to its cursor on the canvas, so a team running
+Encode spaces (`Copy%20writer`). The role becomes the agent's label and color next to its cursor on the canvas, so a team running
 several agents can tell the copywriter from the designer at a glance.
 
 ## What the agent gets

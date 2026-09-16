@@ -2,7 +2,7 @@
   "mcpServers": {
     "croqui": {
       "type": "http",
-      "url": "https://croqui.dev/mcp"
+      "url": "https://croqui.dev/mcp?as=${CROQUI_AGENT_ROLE:-}"
     }
   }
 }
