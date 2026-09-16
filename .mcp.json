@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "croqui": {
+      "type": "http",
+      "url": "https://croqui.dev/mcp"
+    }
+  }
+}

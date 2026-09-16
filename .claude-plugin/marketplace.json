@@ -1,0 +1,24 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "croqui",
+  "description": "The Croqui.dev plugin: MCP server and agent skills for the Croqui.dev design canvas.",
+  "owner": {
+    "name": "Croqui.dev",
+    "url": "https://croqui.dev"
+  },
+  "plugins": [
+    {
+      "name": "croqui",
+      "source": "./",
+      "description": "Croqui.dev — a collaborative design canvas where AI agents write real React screens over MCP.",
+      "category": "design",
+      "keywords": [
+        "croqui",
+        "design",
+        "canvas",
+        "mcp",
+        "react"
+      ]
+    }
+  ]
+}

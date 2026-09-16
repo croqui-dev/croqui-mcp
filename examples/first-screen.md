@@ -30,9 +30,15 @@ invents a button instead of using yours.
 > add a payment screen: product summary, email, card fields, pay button. Use the design system.
 ```
 
-`croqui_write_file` creates `screens/payment.tsx`. The frame appears on the canvas as it is written.
+`croqui_write_file` creates `screens/payment.tsx` as a skeleton: the layout regions, empty. Then the
+agent fills one region per `croqui_edit_file` call (the summary, the email field, the card fields,
+the pay button), and everyone watching sees its cursor move to each region as it lands. With
+"Follow agents" on, the canvas opens the screen by itself.
+
 It is a real React file importing the project's components, not a picture and not a fresh set of
-components invented from the prompt.
+components invented from the prompt. The pay button is a real button with hover and focus states, and
+`data-croqui-goto="screens/payment-success.tsx"` on it makes the click-through work in Present. Before
+reporting, the agent checks `croqui_screenshot` on desktop and mobile.
 
 ## 4. The human annotates
 
