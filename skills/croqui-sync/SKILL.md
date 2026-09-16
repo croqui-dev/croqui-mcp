@@ -7,10 +7,10 @@ description: Process a Croqui.dev sync job — check whether each design screen 
 
 A route on a Croqui.dev project sends a job when an admin asks "what of this design is live?". Your
 receiver (a GitHub Action, a small webhook listener, anything) saves the job to a JSON file and starts
-this skill with its path. You compare each screen's manifest with the production code in the current
-repository and report back. Croqui.dev computes the status; you supply evidence.
+this skill with its path. You compare each screen's manifest with the production code and report
+back. Croqui.dev computes the status; you supply evidence.
 
-Argument: path to the job file. Run from the root of the production repository.
+Argument: path to the job file.
 
 ## Never
 
@@ -30,6 +30,22 @@ The job file is the route's envelope plus the token:
 
 Design source for a screen: `croqui_read_file { project: project_id, path }` over the Croqui.dev MCP.
 The manifest in the envelope is what you check against; the TSX helps you understand it.
+
+## Production repository
+
+Find it before reporting anything. First match wins:
+
+1. `repo_dir` in the job file (the receiver writes it);
+2. the `CROQUI_REPO_DIR` environment variable, with `<repo>` replaced by `project_id` without the
+   `product:` prefix (`CROQUI_REPO_DIR=~/code/<repo>` and `product:billing` → `~/code/billing`);
+3. the current directory.
+
+A candidate counts only if it exists and `git -C <dir> rev-parse --show-toplevel` succeeds; use that
+top-level path. Every search, `line` and `commit` below comes from it.
+
+None qualifies: for each screen, send the final body with every manifest item `missing` and
+`note: "production repository not found"`, say which paths you tried, and stop. Never search an
+unrelated repository just because it is the current directory.
 
 ## Per screen
 
@@ -70,7 +86,7 @@ Every manifest item you do not report is recorded as `missing` ("not reported"),
   "extra": [{ "key": "button:download pdf", "note": "in production, not in the design" }],
   "report": "Plans match. The invoices table is missing the total column.",
   "prod_url": "https://app.example.com/billing",
-  "commit": "<git rev-parse --short HEAD>"
+  "commit": "<git -C <repo> rev-parse --short HEAD>"
 }
 ```
 
