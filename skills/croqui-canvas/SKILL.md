@@ -95,6 +95,8 @@ differ, the server's version wins.
 - Every screen is desktop and mobile. Default export receives `device`; `meta.viewports` is explicit.
   A mobile that differs structurally uses `viewports.mobile.export = "Mobile"` and `export function
   Mobile()`.
+  The viewer lists `<Screen> · Desktop` and `<Screen> · Mobile` as separate screens; both still come
+  from this one file.
 - Drawer, modal, sheet: a named export listed in `meta.frames`, rendered open and standalone. Never an
   overlay on top of the default export. Exports used by `viewports.*.export` do not go in `frames`.
   `prod` is a reserved export name.
