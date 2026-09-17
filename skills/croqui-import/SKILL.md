@@ -35,7 +35,9 @@ This is where imports get slow and wrong. From the image, read:
 - the type scale (3–5 sizes), the palette (sample flat areas), radii and the spacing rhythm;
 - what is interactive (buttons, tabs, inputs, carousels) and where Present should navigate.
 
-Then rebuild with flex/grid at the target viewport, in passes (build contract rule 3).
+Then rebuild with flex/grid at the target viewport, live: skeleton first, then one region at a time
+wired in as soon as its component exists (build contract rule 3). No local renders to compare against
+the image (rule 7); one `croqui_screenshot` at the end.
 
 Do not:
 

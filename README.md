@@ -195,7 +195,7 @@ reads `SKILL.md` folders can use them.
 
 | Skill | Use it to |
 | --- | --- |
-| [`croqui-canvas`](./skills/croqui-canvas/SKILL.md) | Build and edit screens: read context and design system, then write in passes the team watches live |
+| [`croqui-canvas`](./skills/croqui-canvas/SKILL.md) | Build and edit screens: read context and design system, then build section by section while the team watches live |
 | [`croqui-notes`](./skills/croqui-notes/SKILL.md) | Resolve the open annotations on a project, each with a reply on the note |
 | [`croqui-import`](./skills/croqui-import/SKILL.md) | Bring screenshots or an existing app into a project as faithful React screens |
 | [`croqui-sync`](./skills/croqui-sync/SKILL.md) | Check a sync job's design screens against production code and report with evidence |
@@ -208,11 +208,12 @@ result:
 1. **Layout in flow.** Flex and grid, never coordinates placed element by element.
 2. **Components first.** The design system, then the project's `components/`, then something new.
    Anything that repeats, even inside one screen, is a component.
-3. **In passes.** A skeleton, then one region per edit, so the screen grows on the canvas.
+3. **Live, in cycles.** A skeleton first, then one region at a time wired in as soon as its component
+   exists, so the screen is assembled on the canvas. No local renders or drafts uploaded at the end.
 4. **Interactive.** Real buttons and links with hover and focus, working tabs and toggles.
 5. **Wired for Present.** `data-croqui-goto`, `data-croqui-open`, `data-croqui-close` and
    `data-croqui-back` make the click-through work in presentation mode.
-6. **Verified.** `croqui_screenshot` on desktop and mobile before the agent reports.
+6. **Verified.** `compile` on every write, and one `croqui_screenshot` after the last pass.
 
 The full text lives in [`skills/croqui-canvas`](./skills/croqui-canvas/SKILL.md) and is served to
 every agent by `croqui_ds_reference`.

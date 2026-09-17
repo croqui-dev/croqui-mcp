@@ -52,13 +52,14 @@ differ, the server's version wins.
    chips), is a component in `components/<Name>.tsx` with minimal typed props, rendered from mock data
    with `.map`. A screen file composes regions and components; it is never a single component that
    wraps the whole screen.
-3. **Build in passes, one unit per call**, so the people watching see the screen grow:
-   1. Skeleton: `croqui_write_file` with `meta`, viewports and the layout regions as simple
-      placeholders.
-   2. Regions: create or reuse each component, then swap it into its region with `croqui_edit_file`,
-      one region per call.
-   3. States and interactions (rule 4) and Present wiring (rule 5).
-   4. `croqui_screenshot` on desktop and mobile; fix what it shows.
+3. **Build live, in cycles, one unit per call.** People watch the canvas while you work, so every
+   call should change what they see:
+   1. Skeleton first, before drawing assets or building components: `croqui_write_file` with `meta`,
+      viewports and the layout regions as labelled placeholders.
+   2. Then one region per cycle, top to bottom: create or reuse that region's component(s) and swap it
+      into its placeholder with `croqui_edit_file` right away. The canvas only shows what a screen
+      renders, so never write a batch of components before wiring the first one.
+   3. States and interactions (rule 4) and Present wiring (rule 5), as further edits.
    Do not send a finished screen in one write.
 4. **Interactive by default.** Anything clickable is a `<button>` or `<a>` with `cursor-pointer` and
    visible hover, active and focus-visible styles. Tabs, segmented controls, toggles, accordions,
@@ -77,9 +78,14 @@ differ, the server's version wins.
    base64 sprites or background-image slices, and never measure pixels to place elements. Photos,
    logos and illustrations become neutral placeholders unless the user provides the asset; list them
    in the report. For a full import, use the `croqui-import` skill.
-7. **Verify** with `croqui_screenshot` (desktop and mobile) before reporting.
-   `croqui_inspect_screen` is the cheap check for structure and copy; the screenshot is the check for
-   overlap, overflow, cut text and contrast.
+7. **The canvas is the only workspace.** Do not build, bundle, render or screenshot screens locally,
+   keep a local copy of the project, or iterate in scratch files to upload the result later. Drafts,
+   SVG logos and illustrations included, go straight to the canvas, where people see them.
+8. **Verify cheaply.** Every write returns `compile`: fix a broken compile before the next call; that
+   is the per-step check. `croqui_inspect_screen` is the cheap check for structure and copy. Take
+   `croqui_screenshot` once, after the last pass, on the device the screen is designed for (both only
+   when their layouts differ), for overlap, overflow, cut text and contrast. Never screenshot after
+   each region. If `croqui_screenshot` is unavailable, skip the visual check and say so in the report.
 
 ## 4. Screen format
 

@@ -31,14 +31,15 @@ invents a button instead of using yours.
 ```
 
 `croqui_write_file` creates `screens/payment.tsx` as a skeleton: the layout regions, empty. Then the
-agent fills one region per `croqui_edit_file` call (the summary, the email field, the card fields,
-the pay button), and everyone watching sees its cursor move to each region as it lands. With
+agent works region by region, top to bottom (the summary, the email field, the card fields, the pay
+button): it writes the region's component and wires it in with `croqui_edit_file` in the same cycle.
+Everyone watching sees its cursor draw a selection over each region as the new content appears. With
 "Follow agents" on, the canvas opens the screen by itself.
 
 It is a real React file importing the project's components, not a picture and not a fresh set of
 components invented from the prompt. The pay button is a real button with hover and focus states, and
 `data-croqui-goto="screens/payment-success.tsx"` on it makes the click-through work in Present. Before
-reporting, the agent checks `croqui_screenshot` on desktop and mobile.
+reporting, the agent takes one `croqui_screenshot` of the finished screen.
 
 ## 4. The human annotates
 

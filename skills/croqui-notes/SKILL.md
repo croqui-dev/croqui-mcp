@@ -36,8 +36,10 @@ Argument: note numbers to handle (`3`, `1 4`). No argument: every open note (`to
       only if the note clearly asks for the change, and say so in the reply.
    5. Edit with `croqui_edit_file` (one snippet per call) or `croqui_write_file` (rewrite). `compile.ok`
       before moving on.
-   6. Check: `croqui_screenshot { project, path }` of the marked screen. If you touched a shared
-      component, one screenshot of another screen that uses it.
+   6. Check only what needs pixels: copy, props and small style edits are verified by `compile.ok`.
+      When the note changed layout, take one `croqui_screenshot { project, path }` of the marked
+      screen; when several notes touch the same screen, take it once after the last of them. Never
+      render screens locally; if the screenshot is unavailable, say so in the reply.
    7. `croqui_resolve_annotation { project, id, status: "done", reply }`. The reply is 2–4 sentences:
       what changed, which files, assumptions, anything left for a human decision.
 5. **Finish** with a short table for the user: `note · what changed · open question`. No narration of
