@@ -3,6 +3,10 @@
     "croqui": {
       "type": "http",
       "url": "https://croqui.dev/mcp?as=${CROQUI_AGENT_ROLE:-}"
+    },
+    "croqui-live": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/live/bridge.mjs"]
     }
   }
 }
