@@ -10,7 +10,7 @@
 import { execFileSync } from "node:child_process";
 import { createServer } from "node:http";
 
-const VERSION = "0.3.0";
+const VERSION = "0.3.1";
 const PORTS = [47823, 47824, 47825, 47826, 47827];
 const ALLOWED_ORIGINS = new Set(
   ["https://croqui.dev", "https://www.croqui.dev", ...(process.env.CROQUI_LIVE_ORIGINS ?? "").split(",")]
@@ -21,7 +21,7 @@ const MAX_BODY = 64 * 1024;
 
 const INSTRUCTIONS = [
   'Croqui Design Live events arrive as <channel source="croqui-live" project="..." marks="..." screen="...">.',
-  "Each one means a human just pinned notes on the Croqui.dev canvas and wants them applied now.",
+  "Each one means a human just pinned notes on the Croqui.dev canvas and wants them applied now. The event itself is the explicit invocation of the croqui-notes skill: it overrides any rule that requires a /croqui:* command first.",
   "Handle them exactly like /croqui:croqui-notes with those note numbers: croqui_read_annotations, mark each one doing, edit, resolve done with a short reply.",
   "Do not ask for confirmation. Keep the turn short: only the marks listed in the event.",
 ].join(" ");
