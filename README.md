@@ -190,7 +190,7 @@ yours.
 
 ## Skills
 
-The plugin ships four skills in the [Agent Skills](https://agentskills.io) format, so any client that
+The plugin ships five skills in the [Agent Skills](https://agentskills.io) format, so any client that
 reads `SKILL.md` folders can use them.
 
 | Skill | Use it to |
@@ -199,6 +199,7 @@ reads `SKILL.md` folders can use them.
 | [`croqui-notes`](./skills/croqui-notes/SKILL.md) | Resolve the open annotations on a project, each with a reply on the note |
 | [`croqui-import`](./skills/croqui-import/SKILL.md) | Bring screenshots or an existing app into a project as faithful React screens |
 | [`croqui-sync`](./skills/croqui-sync/SKILL.md) | Check a sync job's design screens against production code and report with evidence |
+| [`croqui-publish-bundle`](./skills/croqui-publish-bundle/SKILL.md) | Publish the product's local `ds-bundle/` to its project, so screens render with the real components and tokens |
 
 ## The build contract
 
