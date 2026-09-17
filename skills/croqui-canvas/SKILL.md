@@ -55,9 +55,10 @@ differ, the server's version wins.
 3. **Build live, in cycles, one unit per call.** People watch the canvas while you work, so every
    call should change what they see:
    1. Skeleton first, before drawing assets or building components: `croqui_write_file` with `meta`,
-      viewports and the layout regions as labelled placeholders.
+      viewports and the layout regions as placeholders, each marked `data-croqui-slot="<Region>"`
+      (`<section data-croqui-slot="Pricing" ...>`). Viewers see you working on the first slot left.
    2. Then one region per cycle, top to bottom: create or reuse that region's component(s) and swap it
-      into its placeholder with `croqui_edit_file` right away. The canvas only shows what a screen
+      in for its placeholder, `data-croqui-slot` included, with `croqui_edit_file` right away. The canvas only shows what a screen
       renders, so never write a batch of components before wiring the first one.
    3. States and interactions (rule 4) and Present wiring (rule 5), as further edits.
    Do not send a finished screen in one write.

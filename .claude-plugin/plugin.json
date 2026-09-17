@@ -1,7 +1,7 @@
 {
   "name": "croqui",
   "description": "Croqui.dev — a collaborative design canvas where AI agents write real React screens over MCP.",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "author": {
     "name": "Croqui.dev",
     "url": "https://croqui.dev"
