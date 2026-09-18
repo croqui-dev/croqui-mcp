@@ -4,9 +4,8 @@ name: Skills drift check
 # packages/core/src/agent-guides.ts) via scripts/gen-plugin.mjs. This job catches drift between
 # what's checked in here and what the server currently serves at https://croqui.dev/skills.json.
 #
-# Intentionally NOT triggered on push: the /skills.json and /skills/<name>/SKILL.md endpoints only
-# exist starting with the next server deploy, so running this on push right now would just fail with
-# false positives before that deploy ships.
+# Not triggered on push: a server deploy and a plugin push are separate steps, so a push can land
+# a moment before (or after) the matching deploy.
 on:
   schedule:
     - cron: "0 6 * * *"
@@ -29,7 +28,7 @@ jobs:
             exit 1
           fi
 
-          names="$(echo "$skills_json" | jq -r '.[] | (.name // .id // .slug)')"
+          names="$(echo "$skills_json" | jq -r '.skills[].name')"
           if [ -z "$names" ]; then
             echo "::error::No skill names found in skills.json"
             exit 1
