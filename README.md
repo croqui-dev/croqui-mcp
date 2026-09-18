@@ -101,8 +101,9 @@ codex mcp add croqui --url https://croqui.dev/mcp
 codex mcp list
 ```
 
-Authorization happens in the browser the first time a tool is called. To use the skills, copy the
-folders under [`skills/`](./skills) into your Codex skills directory.
+Authorization happens in the browser the first time a tool is called. To install the skills, use the
+[Advanced setup](#advanced-setup-any-agent) prompt below — it fetches the current skill list from the
+server instead of copying folders by hand.
 
 </details>
 
@@ -141,6 +142,20 @@ first call.
 ```
 
 </details>
+
+### Advanced setup (any agent)
+
+For any coding agent — Claude Code, Codex, Cursor, Gemini CLI, or another MCP-capable client — paste
+this prompt in:
+
+```text
+https://croqui.dev/agent-setup.md
+```
+
+The agent fetches the current skill list from `https://croqui.dev/skills.json` and installs each one,
+in addition to adding the MCP server. This is the fastest way to get the full skill set on a client
+that doesn't have a dedicated plugin format, and it always matches what the server currently ships —
+no manual copying, no stale local skills.
 
 ### Give the agent a role
 
@@ -260,3 +275,11 @@ sketch a designer scribbles fast.
   <a href="https://croqui.dev/docs">Docs</a> ·
   <a href="https://croqui.dev/llms.txt">llms.txt</a>
 </p>
+
+## For contributors
+
+The [`skills/`](./skills) folder is generated. It's produced from the Croqui.dev server source (the
+private `croqui` repo, `packages/core/src/agent-guides.ts`) by `scripts/gen-plugin.mjs`, which also
+writes `.claude-plugin/plugin.json`, `.cursor-plugin/plugin.json` and the version in `server.json`.
+Don't hand-edit files under `skills/` — changes will be overwritten the next time that script runs.
+Fixes to skill content belong in the source repo.

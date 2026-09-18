@@ -5,108 +5,145 @@ description: Build and edit screens on a Croqui.dev design canvas through its MC
 
 # Croqui.dev canvas
 
-Croqui.dev is a collaborative design canvas where AI agents write real React screens over MCP, humans
-annotate and approve, and the approved screen ships to production exactly as drawn. You are the agent
-writing. People are usually watching the canvas while you work: your writes show up as a cursor and
-selection boxes on the frame.
+Croqui.dev is a collaborative design canvas: you write real React screens over MCP, humans watch them
+appear, annotate and approve, and the approved screen ships. Your writes show up on the canvas as a
+cursor and selection boxes on the frame, so the order and pace of your calls is what people see.
 
 ## 0. Connection
 
-Call `croqui_status`. If the tool does not exist, the MCP server is not connected: tell the user to
-install this plugin or run `claude mcp add --transport http croqui https://croqui.dev/mcp`, then
-`/mcp` → croqui → Authenticate. Do not try to reach the canvas any other way.
+No `croqui_*` tools available: the MCP server is not connected. Add a remote (HTTP) MCP server named
+`croqui` with the URL `https://croqui.dev/mcp` in your client's MCP config (or the connector settings)
+and sign in when the browser opens. Step by step for each client: https://croqui.dev/agent-setup.md.
+Tools listed but calls fail with an auth error: re-authenticate the `croqui` server in your client.
 
-`croqui_status` also says which teams you can write to and their plan limits. Read it before creating
-a project.
+## 1. Where you are
 
-## 1. Find the project
+`croqui_status` — who you are signed in as, which teams you can write to and their plan limits. Read
+it before creating anything.
 
-- `croqui_list_projects`. Match the user's words or the current repository name to a project id
-  (`product:<kebab-name>`). Reuse beats creating a near-duplicate.
-- No match and the user wants a new one: `croqui_create_project { id, name, organizationId }`. If the
-  caller belongs to more than one team, ask which one before creating; a project in the wrong team is
-  invisible to the people who need it.
+## 2. Find the project
 
-## 2. Read before writing (once per session)
+- `croqui_list_projects`. Match the user's words or the repository name to a project id
+  (`product:<kebab-name>`). Reusing beats creating a near-duplicate.
+- No match and the user wants a new one: `croqui_create_project { id, name, organizationId }`. With
+  more than one team, ask which one first — a project in the wrong team is invisible to the people who
+  need it.
 
-1. `croqui_context { project }` — screens, components, which components are `shared` (used by more
-   than one screen, with `usedBy`), references, open annotations and each screen's review stage.
-2. `croqui_ds_reference { project }` — the screen format, the build contract and the design system.
-   For the components you plan to use, one call: `croqui_ds_reference { project, components:
-   "Button,Card,Input" }`, not one call per component.
-3. When working inside the product's own repository, read the real page you are designing (routes,
-   copy, data shape) to understand it. Never edit the product repository from this skill: the canvas
-   is where the design lives.
+## 3. Read before writing (once per session)
 
-## 3. Build contract
+1. `croqui_context { project }` — screens, components, which are `shared` (with `usedBy`),
+   references, open annotations, each screen's review stage.
+2. `croqui_ds_reference { project }` — screen format, build contract, design bar, design system. For
+   the components you plan to use, one call: `croqui_ds_reference { project, components: "Button,Card" }`.
+3. When the product's repository is at hand, read the real page you are designing (routes, copy, data
+   shape). The canvas is where the design lives; never edit the product repo from here.
 
-Follow it for every screen and component. `croqui_ds_reference` returns the same text; if the two ever
-differ, the server's version wins.
+## 4. Build contract
 
-1. **Structure first.** Lay the screen out in document flow with flex/grid. `position: absolute` is
-   only for things that float over flow content (badges, FABs, decorative art). Never place a whole
-   screen element by element with coordinates, not even when copying a screenshot.
-2. **Components before screens.** Reuse in this order: `@ds` → the project's `components/`
-   (`croqui_list_files { prefix: "components/" }`, `croqui_search`) → only then create. Anything that
-   repeats, across screens or inside one screen (list rows, cards in a grid, tabs, nav items, tiles,
-   chips), is a component in `components/<Name>.tsx` with minimal typed props, rendered from mock data
-   with `.map`. A screen file composes regions and components; it is never a single component that
-   wraps the whole screen.
-3. **Build live, in cycles, one unit per call.** People watch the canvas while you work, so every
-   call should change what they see:
-   1. Skeleton first, before drawing assets or building components: `croqui_write_file` with `meta`,
-      viewports and the layout regions as placeholders, each marked `data-croqui-slot="<Region>"`
-      (`<section data-croqui-slot="Pricing" ...>`). Viewers see you working on the first slot left.
-   2. Then one region per cycle, top to bottom: create or reuse that region's component(s) and swap it
-      in for its placeholder, `data-croqui-slot` included, with `croqui_edit_file` right away. The canvas only shows what a screen
+Build contract: how a screen gets built on the canvas.
+
+1. Structure first. Lay the screen out in document flow with flex/grid. position:absolute is only for
+   things that float over flow content (badges, FABs, decorative art). Never place a whole screen
+   element by element with coordinates, not even when copying a screenshot.
+
+2. Components before screens. Reuse in this order: @ds (croqui_ds_reference) → the project's
+   components/ (croqui_list_files, croqui_search) → only then create. Anything that repeats, across
+   screens or inside one screen (list rows, cards in a grid, tabs, nav items, tiles, chips), is a
+   component in components/<Name>.tsx with minimal typed props, rendered from mock data with .map.
+   A screen file composes regions and components; it is never a single component wrapping the whole
+   screen.
+
+3. Build live, in cycles. People watch the canvas while you work, so every call should change what
+   they see. One unit per call:
+   a. Skeleton first, before drawing assets or building components: croqui_write_file with meta,
+      viewports and the layout regions as placeholders, each marked data-croqui-slot="<Region>"
+      (<section data-croqui-slot="Pricing" ...>). Viewers see you working on the first slot left.
+   b. Then one region per cycle, top to bottom: create or reuse that region's component(s) and swap
+      it in for its placeholder, data-croqui-slot included, with croqui_edit_file right away. The canvas only shows what a screen
       renders, so never write a batch of components before wiring the first one.
-   3. States and interactions (rule 4) and Present wiring (rule 5), as further edits.
+   c. States and interactions (rule 4) and Present wiring (rule 5), as further edits.
    Do not send a finished screen in one write.
-4. **Interactive by default.** Anything clickable is a `<button>` or `<a>` with `cursor-pointer` and
-   visible hover, active and focus-visible styles. Tabs, segmented controls, toggles, accordions,
-   selects and steppers work with local `useState`. Carousels scroll (`overflow-x-auto`, snap). Inputs
-   accept typing.
-5. **Wire Present.** On the element that leads somewhere:
-   - `data-croqui-goto="screens/<group>/<screen>.tsx"` opens another screen;
-   - `data-croqui-open="<Export>"` opens a drawer, modal or sheet listed in `meta.frames`;
-   - `data-croqui-close` inside that frame closes it;
-   - `data-croqui-back` goes back to the previous screen.
+
+4. Interactive by default. Anything clickable is a <button> or <a> with cursor-pointer and visible
+   hover, active and focus-visible styles. Tabs, segmented controls, toggles, accordions, selects and
+   steppers work with local useState. Carousels scroll (overflow-x-auto, snap). Inputs accept typing.
+
+5. Wire Present. On the element that leads somewhere:
+   data-croqui-goto="screens/<group>/<screen>.tsx"  open another screen
+   data-croqui-open="<Export>"                      open a drawer/modal/sheet listed in meta.frames
+   data-croqui-close                                inside that frame, close it
+   data-croqui-back                                 go back to the previous screen
    Link only to screens and frames that exist. Do not invent screens to complete a flow; leave the
-   element inert and say so in the report. The attributes only act in Present, so keep real `onClick`
-   state as well.
-6. **Copying a reference image.** Read the structure, then rebuild it with rules 1–5 at the target
+   element inert and mention it in the report. The attributes only act in Present, so keep real
+   onClick state as well.
+
+6. Copying a reference image. Read the structure, then rebuild it with rules 1-5 at the target
    viewport. Take colors, type scale, radii and spacing from the image. Never crop the image into
-   base64 sprites or background-image slices, and never measure pixels to place elements. Photos,
-   logos and illustrations become neutral placeholders unless the user provides the asset; list them
-   in the report. For a full import, use the `croqui-import` skill.
-7. **The canvas is the only workspace.** Do not build, bundle, render or screenshot screens locally,
-   keep a local copy of the project, or iterate in scratch files to upload the result later. Drafts,
-   SVG logos and illustrations included, go straight to the canvas, where people see them.
-8. **Verify cheaply.** Every write returns `compile`: fix a broken compile before the next call; that
-   is the per-step check. `croqui_inspect_screen` is the cheap check for structure and copy. Take
-   `croqui_screenshot` once, after the last pass, on the device the screen is designed for (both only
-   when their layouts differ), for overlap, overflow, cut text and contrast. Never screenshot after
-   each region. If `croqui_screenshot` is unavailable, skip the visual check and say so in the report.
+   base64 sprites or background-image slices, and never measure pixels to place elements.
+   Photos, logos and illustrations become neutral placeholders unless the user provides the asset;
+   list them in the report.
 
-## 4. Screen format
+7. The canvas is the only workspace. Do not build, bundle, render or screenshot screens locally, keep a
+   local copy of the project, or iterate in scratch files to upload the result later. Drafts, SVG
+   logos and illustrations included, go straight to the canvas, where people see them.
 
-- Path: `screens/<group>/<screen>.tsx`. First line: `// @source <what it is based on>` (a route in the
-  product repo, a reference image, or "new").
-- Every screen is desktop and mobile. Default export receives `device`; `meta.viewports` is explicit.
-  A mobile that differs structurally uses `viewports.mobile.export = "Mobile"` and `export function
-  Mobile()`.
-  The viewer lists `<Screen> · Desktop` and `<Screen> · Mobile` as separate screens; both still come
-  from this one file.
-- Drawer, modal, sheet: a named export listed in `meta.frames`, rendered open and standalone. Never an
-  overlay on top of the default export. Exports used by `viewports.*.export` do not go in `frames`.
-  `prod` is a reserved export name.
-- Transitions are yours to set, humans never edit them: `meta.appear` for the screen, `frames[].kind`
-  (`popup` | `menu`) and `frames[].appear`. An appear is `{ type, direction?, duration?, easing? }`
-  with `type` one of `instant`, `dissolve`, `move-in`, `slide-in`, `push`, `scale`.
-- Imports: `react`, `@ds`, relative paths, `https://esm.sh/<pkg>?external=react,react-dom`. Anything
-  else fails to compile. Tailwind classes only if they exist in the compiled CSS; otherwise `var(--*)`
-  tokens or inline style.
-- Local state and mock data inline, in the product's language. No fetching, no router, no env.
+8. Verify cheaply. Every write returns compile: fix a broken compile before the next call; that is the
+   per-step check. Take croqui_screenshot once, after the last pass, on the device the screen is
+   designed for (both devices only when their layouts differ), and fix what it shows. Never screenshot
+   after each region or each note. If croqui_screenshot is unavailable, skip the visual check and say
+   so in the report. Report: files written, components created or reused, what is wired in Present,
+   what is placeholder or inferred.
+
+## 5. Design bar: the screen has to look designed, not generated.
+
+1. The product decides the look. Before the first write, settle what this product is, who opens this
+   screen and the one job it does for them. Everything after that follows from it: a clinic scheduler,
+   a trading desk and a kids' app do not share a palette, a density or a tone. When the user did not
+   say the domain, infer it, say so in the report and pin the assumption with croqui_mark_for_edit.
+   Never fall back to the default dark-SaaS-dashboard look because nothing told you otherwise.
+
+2. Content first, and real. Mock data is the product's own vocabulary: names, amounts, dates and
+   statuses that could be a real Tuesday in this product, consistent with each other (a total is the
+   sum of its rows, a date is not in the future). Copy is what a person would write, not a label:
+   "Nothing due this week" over "No items". No lorem, no "Card title", no "Description goes here".
+
+3. Icons are drawn, not typed. Inline SVG (currentColor, 1.5 stroke, 20 or 24 box) or a plain
+   letterform. Emoji is content, never the icon system — an emoji in a nav item or a stat card is the
+   clearest tell of a generated screen.
+
+4. One type scale, one spacing step, one accent. Pick a scale (e.g. 12/14/16/20/28/40), a step (4 or
+   8) and at most three weights, and hold them across the screen. Hierarchy comes from size, weight
+   and colour — not from nesting a card inside a card inside a panel. The accent colour has one job
+   (the primary action); if it shows up in five places it has stopped meaning anything.
+
+5. Each viewport is designed, not stretched. Desktop is not the mobile widened, mobile is not the
+   desktop squeezed: reflow the regions, change the density, move navigation where the thumb is.
+   Present renders a fixed viewport, so the screen carries its own scroll (overflowY: auto with
+   minHeight: 0 on the scrolling child), never the page growing to fit.
+
+6. The states that matter, not only the happy one. A list also has empty (with the action that fills
+   it), a loading skeleton, an error, and content that stresses it: the long name that wraps, the
+   seven-digit number, the row that is still processing. Build the ones this screen will really hit
+   and say which you built.
+
+7. Interaction that reads as interactive. Visible hover, active and focus-visible on every control
+   (never remove the outline without replacing it), disabled that looks disabled, selected that looks
+   selected, touch targets ~44px on mobile. Inputs have labels; a placeholder is not a label.
+
+8. Nothing invented to fill the layout. No AI-insight card nobody asked for, no chart of meaningless
+   numbers, no badge, no streak, no decorative gradient panel. An empty region is one region fewer,
+   not a place to put filler. Features the user did not ask for are a question for the report.
+
+9. Legible by default. Body text at 4.5:1 contrast or better against its real background, secondary
+   text still readable, nothing below 12px, no text over a busy image without a scrim.
+
+10. Look at it before you call it done. Read the screenshot as a stranger: what do you read first, is
+    anything cut, overlapping or crowding an edge, does the screen say what it is without a caption.
+    Fix that, then report.
+
+## 6. Screen format
+
+Screen format: `screens/<group>/<screen>.tsx`, `export default function Screen({ device }: { device: "desktop" | "mobile" })` and `export const meta = { name, width, height?, background?, appear?, frames?, viewports?, props? }`. Always desktop+mobile (`viewports`; default 1440×900 / 390×844). Very different mobile: `viewports.mobile.export = "Mobile"`. Drawer/modal/sheet: named export + `meta.frames`, never an overlay on default; each export renders open and standalone and receives `device`. Exports from `viewports.*.export` don't go into `frames`. `prod` is a reserved export (Working card). Figma-style appearance is only defined by the agent (`meta.appear` / `frames[].kind` popup|menu + `frames[].appear`: instant|dissolve|move-in|slide-in|push|scale). Humans don't edit the transition. Allowed imports: `react`, `@ds` (product bundle → window[settings.bundle.global]), relative (`./`, `../`) and `https://` URLs. Any other package fails compilation. Only use Tailwind classes that exist in the compiled CSS; glue with `var(--*)` / inline style; mock content in the domain's language. Present renders in a fixed-height viewport (exact size, clipped, not stretched) — layout must carry its own internal scroll, never assume the page grows to fit content.
 
 ```tsx
 // @source apps/web/app/billing/page.tsx
@@ -145,7 +182,7 @@ export default function Billing({ device }: { device: "desktop" | "mobile" }) {
   );
 }
 
-export function CancelDialog({ device }: { device: "desktop" | "mobile" }) {
+export function CancelDialog() {
   return (
     <div className="flex flex-col gap-4 rounded-xl bg-background p-6">
       <p>Your team keeps access until the end of the billing period.</p>
@@ -155,25 +192,22 @@ export function CancelDialog({ device }: { device: "desktop" | "mobile" }) {
 }
 ```
 
-## 5. Scope
+## 7. Scope
 
 - Edit only what the user asked for: the screen, component or node they named or marked. Do not
   "align" other screens along the way.
-- Reusing an existing component is always fine. **Changing a `shared` component** changes every screen
-  in its `usedBy`: say which screens, and either confirm first or add an optional prop whose default
-  keeps today's behaviour.
+- Changing a `shared` component changes every screen in its `usedBy`: name those screens, and either
+  confirm first or add an optional prop whose default keeps today's behaviour.
 - Before overwriting work you did not do, check `croqui_history { project, path }`.
 - `croqui_edit_file { old, new }` for anything short of a rewrite; `old` must be unique, so widen the
-  snippet instead of falling back to rewriting a large file.
-- Every write returns `compile`. A broken compile is fixed before the next write.
-- **Approved screens.** If the screen's review stage is `approved`, `delivering` or `live`, tell the
-  user before editing: any change moves it to "changed since approval" and it needs approval again
-  before it ships.
+  snippet instead of rewriting a large file.
+- If a screen's stage is `approved`, `delivering` or `live`, say so before editing: any change sends
+  it back for approval before it can ship.
 - Deleting screens is admin-only. Never delete to "start clean".
 
-## 6. Leave a trail
+## 8. Leave a trail
 
-- After a change that needs a human decision, pin it: `croqui_mark_for_edit { project, path, note }`.
+- Anything that needs a human decision gets pinned: `croqui_mark_for_edit { project, path, note }`.
 - Report in a few lines: files written, components created or reused (and which screens share them),
   what is wired in Present, what is placeholder or inferred, what needs a decision. Link
   `https://croqui.dev/?project=<id>`.
@@ -188,7 +222,7 @@ export function CancelDialog({ device }: { device: "desktop" | "mobile" }) {
 | Project state | `croqui_context`, `croqui_events`, `croqui_history` |
 | Conventions and design system | `croqui_ds_reference` |
 | Find things | `croqui_list_files`, `croqui_search`, `croqui_read_file` |
-| Write | `croqui_write_file` (new file or rewrite), `croqui_edit_file` (one snippet) |
+| Write | `croqui_write_file`, `croqui_edit_file`, `croqui_write_files` (one cycle per call) |
 | Check | `croqui_inspect_screen` (structure), `croqui_screenshot` (pixels) |
 | Annotations | `croqui_read_annotations`, `croqui_resolve_annotation`, `croqui_mark_for_edit` |
-| Import a design | `croqui_import_design` (see the `croqui-import` skill) |
+| Import a design | `croqui_import_design` (see the `croqui-import` prompt) |

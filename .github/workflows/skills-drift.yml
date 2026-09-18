@@ -1,0 +1,77 @@
+name: Skills drift check
+
+# skills/*/SKILL.md is generated from the Croqui.dev server source (private `croqui` repo,
+# packages/core/src/agent-guides.ts) via scripts/gen-plugin.mjs. This job catches drift between
+# what's checked in here and what the server currently serves at https://croqui.dev/skills.json.
+#
+# Intentionally NOT triggered on push: the /skills.json and /skills/<name>/SKILL.md endpoints only
+# exist starting with the next server deploy, so running this on push right now would just fail with
+# false positives before that deploy ships.
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  check-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compare local skills against server source
+        run: |
+          set -uo pipefail
+
+          skills_json="$(curl -sS -f https://croqui.dev/skills.json)"
+          if [ -z "$skills_json" ]; then
+            echo "::error::Could not fetch https://croqui.dev/skills.json"
+            exit 1
+          fi
+
+          names="$(echo "$skills_json" | jq -r '.[] | (.name // .id // .slug)')"
+          if [ -z "$names" ]; then
+            echo "::error::No skill names found in skills.json"
+            exit 1
+          fi
+
+          drifted=()
+
+          while IFS= read -r name; do
+            [ -z "$name" ] && continue
+
+            local_file="skills/${name}/SKILL.md"
+            if [ ! -f "$local_file" ]; then
+              echo "::error::Missing local file for skill '${name}': ${local_file}"
+              drifted+=("${name} (missing local file)")
+              continue
+            fi
+
+            remote_file="$(mktemp)"
+            if ! curl -sS -f "https://croqui.dev/skills/${name}/SKILL.md" -o "$remote_file"; then
+              echo "::error::Could not fetch SKILL.md for skill '${name}'"
+              drifted+=("${name} (fetch failed)")
+              rm -f "$remote_file"
+              continue
+            fi
+
+            if ! diff -q "$remote_file" "$local_file" > /dev/null 2>&1; then
+              echo "::error::Drift detected for skill '${name}': ${local_file} does not match server"
+              drifted+=("${name}")
+            fi
+
+            rm -f "$remote_file"
+          done <<< "$names"
+
+          if [ "${#drifted[@]}" -gt 0 ]; then
+            echo ""
+            echo "Drifted skills (local skills/ is out of sync with https://croqui.dev):"
+            for d in "${drifted[@]}"; do
+              echo "  - ${d}"
+            done
+            echo ""
+            echo "Run plugin:gen in the croqui repo and re-publish to this repo."
+            exit 1
+          fi
+
+          echo "No drift. All local SKILL.md files match the server."
