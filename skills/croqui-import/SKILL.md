@@ -39,9 +39,10 @@ and radius until the user uploads the real assets.
 ## 4. What the image does not show
 
 Hover, focus, pressed, empty and error states: build the interactive default without inventing new
-content. Content cut off by the capture: complete it minimally and list it as inferred. Only a mobile
-capture: derive the desktop viewport and say so. Screens the flow implies but nobody showed: do not
-create them — leave the element inert and list it.
+content. Content cut off by the capture: complete it minimally and list it as inferred. A mobile
+capture makes a mobile screen (`meta.device: "mobile"`) — do not invent a desktop counterpart from
+it; a desktop version is a separate import, only if the user asks for one. Screens the flow implies
+but nobody showed: do not create them — leave the element inert and list it.
 
 ## 5. Report
 

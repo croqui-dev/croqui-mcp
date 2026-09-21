@@ -62,9 +62,10 @@ Build contract: how a screen gets built on the canvas.
 
 3. Build live, in cycles. People watch the canvas while you work, so every call should change what
    they see. One unit per call:
-   a. Skeleton first, before drawing assets or building components: croqui_write_file with meta,
-      viewports and the layout regions as placeholders, each marked data-croqui-slot="<Region>"
-      (<section data-croqui-slot="Pricing" ...>). Viewers see you working on the first slot left.
+   a. Skeleton first, before drawing assets or building components: croqui_write_file with meta
+      (device only if this screen is mobile) and the layout regions as placeholders, each marked
+      data-croqui-slot="<Region>" (<section data-croqui-slot="Pricing" ...>). Viewers see you working
+      on the first slot left.
    b. Then one region per cycle, top to bottom: create or reuse that region's component(s) and swap
       it in for its placeholder, data-croqui-slot included, with croqui_edit_file right away. The canvas only shows what a screen
       renders, so never write a batch of components before wiring the first one.
@@ -95,11 +96,10 @@ Build contract: how a screen gets built on the canvas.
    logos and illustrations included, go straight to the canvas, where people see them.
 
 8. Verify cheaply. Every write returns compile: fix a broken compile before the next call; that is the
-   per-step check. Take croqui_screenshot once, after the last pass, on the device the screen is
-   designed for (both devices only when their layouts differ), and fix what it shows. Never screenshot
-   after each region or each note. If croqui_screenshot is unavailable, skip the visual check and say
-   so in the report. Report: files written, components created or reused, what is wired in Present,
-   what is placeholder or inferred.
+   per-step check. Take croqui_screenshot once, after the last pass, on the screen's own device (a
+   screen only ever has one), and fix what it shows. Never screenshot after each region or each note.
+   If croqui_screenshot is unavailable, skip the visual check and say so in the report. Report: files
+   written, components created or reused, what is wired in Present, what is placeholder or inferred.
 
 ## 5. Design bar: the screen has to look designed, not generated.
 
@@ -123,10 +123,11 @@ Build contract: how a screen gets built on the canvas.
    and colour — not from nesting a card inside a card inside a panel. The accent colour has one job
    (the primary action); if it shows up in five places it has stopped meaning anything.
 
-5. Each viewport is designed, not stretched. Desktop is not the mobile widened, mobile is not the
-   desktop squeezed: reflow the regions, change the density, move navigation where the thumb is.
-   Present renders a fixed viewport, so the screen carries its own scroll (overflowY: auto with
-   minHeight: 0 on the scrolling child), never the page growing to fit.
+5. Each screen is designed for its own device, not stretched. A mobile screen is not its desktop
+   counterpart squeezed, and a desktop screen is not a mobile one widened: reflow the regions, change
+   the density, move navigation where the thumb is. Present renders a fixed viewport, so the screen
+   carries its own scroll (overflowY: auto with minHeight: 0 on the scrolling child), never the page
+   growing to fit.
 
 6. The states that matter, not only the happy one. A list also has empty (with the action that fills
    it), a loading skeleton, an error, and content that stresses it: the long name that wraps, the
@@ -150,7 +151,7 @@ Build contract: how a screen gets built on the canvas.
 
 ## 6. Screen format
 
-Screen format: `screens/<group>/<screen>.tsx`, `export default function Screen({ device }: { device: "desktop" | "mobile" })` and `export const meta = { name, width, height?, background?, appear?, frames?, viewports?, props? }`. Always desktop+mobile (`viewports`; default 1440×900 / 390×844). Very different mobile: `viewports.mobile.export = "Mobile"`. Drawer/modal/sheet: named export + `meta.frames`, never an overlay on default; each export renders open and standalone and receives `device`. Exports from `viewports.*.export` don't go into `frames`. `prod` is a reserved export (Working card). Figma-style appearance is only defined by the agent (`meta.appear` / `frames[].kind` popup|menu + `frames[].appear`: instant|dissolve|move-in|slide-in|push|scale). Humans don't edit the transition. Allowed imports: `react`, `@ds` (product bundle → window[settings.bundle.global]), relative (`./`, `../`) and `https://` URLs. Any other package fails compilation. Only use Tailwind classes that exist in the compiled CSS; glue with `var(--*)` / inline style; mock content in the domain's language. Present renders in a fixed-height viewport (exact size, clipped, not stretched) — layout must carry its own internal scroll, never assume the page grows to fit content. Optional `export const variants = { <axis>: { options: string[] | { id, label?, props? }[], default } }` declares plan/profile/state variants for this screen — the frame reads `?v=<axis>:<option>,...`, injects `{ [axis]: optionId }` into the component plus the selected option's `props`, and the variant switches in place, never as a second screen file. Axis names `device`, `project`, `doc`, `key`, `legacy` are reserved and ignored with an error.
+Screen format: `screens/<group>/<screen>.tsx`, `export default function Screen({ device }: { device: "desktop" | "mobile" })` and `export const meta = { name, device?, width, height?, background?, appear?, frames?, viewports?, props? }`. A screen is ONE device: `meta.device: "mobile"` declares mobile, absent = desktop. Never write both a desktop and a mobile version of the same screen — the mobile counterpart is a separate file (`<screen>.mobile.tsx` by convention), created only when the human asks for it. The `device` prop still reaches the component either way (it just always matches the screen's own `meta.device`). `meta.viewports.<device>.width/height` still sets a custom size for that one device; `viewports.*.export` is legacy from the paired era and is ignored. Drawer/modal/sheet: named export + `meta.frames`, never an overlay on default; each export renders open and standalone and receives `device`. `prod` is a reserved export (Working card). Figma-style appearance is only defined by the agent (`meta.appear` / `frames[].kind` popup|menu + `frames[].appear`: instant|dissolve|move-in|slide-in|push|scale). Humans don't edit the transition. Allowed imports: `react`, `@ds` (product bundle → window[settings.bundle.global]), relative (`./`, `../`) and `https://` URLs. Any other package fails compilation. Only use Tailwind classes that exist in the compiled CSS; glue with `var(--*)` / inline style; mock content in the domain's language. Present renders in a fixed-height viewport (exact size, clipped, not stretched) — layout must carry its own internal scroll, never assume the page grows to fit content. Optional `export const variants = { <axis>: { options: string[] | { id, label?, props? }[], default } }` declares plan/profile/state variants for this screen — the frame reads `?v=<axis>:<option>,...`, injects `{ [axis]: optionId }` into the component plus the selected option's `props`, and the variant switches in place, never as a second screen file. Axis names `device`, `project`, `doc`, `key`, `legacy` are reserved and ignored with an error.
 
 ```tsx
 // @source apps/web/app/billing/page.tsx
@@ -161,12 +162,12 @@ import { PLANS } from "../../components/data";
 
 export const meta = {
   name: "Billing",
-  viewports: {
-    desktop: { width: 1440, height: 900 },
-    mobile: { width: 390, height: 844 },
-  },
   frames: [{ export: "CancelDialog", name: "Cancel plan", kind: "popup", appear: { type: "scale" } }],
 };
+
+// No `device` field: this screen is desktop (the default). A mobile Billing, if the user asks for
+// one, is a separate file (`billing.mobile.tsx`) with `meta.device: "mobile"` — never a second
+// export or a `viewports.mobile` entry on this one.
 
 // Free/Pro/Enterprise is a variant axis, not three copies of this screen: the frame injects
 // `plan` as a prop and the render below reacts to it. Same for empty/loading/error states —
@@ -183,7 +184,7 @@ export default function Billing({ device, plan }: { device: "desktop" | "mobile"
         <h1 className="text-2xl font-semibold">Billing</h1>
         <Button variant="ghost" data-croqui-open="CancelDialog">Cancel plan</Button>
       </header>
-      <section className={device === "mobile" ? "flex flex-col gap-3" : "grid grid-cols-2 gap-4"}>
+      <section className="grid grid-cols-2 gap-4">
         {PLANS.map((item) => (
           <PlanCard key={item.id} {...item} selected={selected === item.id} onSelect={() => setSelected(item.id)} />
         ))}
