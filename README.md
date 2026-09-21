@@ -194,9 +194,10 @@ several agents can tell the copywriter from the designer at a glance.
 | | `croqui_delete_file` | Delete a file |
 | Check | `croqui_inspect_screen` | A screen's structure as text: hierarchy, classes and copy |
 | | `croqui_screenshot` | Render a screen on the server and return the image |
-| Review | `croqui_read_annotations` | Read the human pins and notes, with attached references |
+| Review | `croqui_read_annotations` | Read the pins and notes: open by default, `status`/`mine` for the corpus of how someone reviews |
 | | `croqui_resolve_annotation` | Mark an annotation in progress or done, with a reply |
 | | `croqui_mark_for_edit` | Pin a note on a screen for a human to review |
+| | `croqui_write_presets` | Save the signed-in user's own taste presets, after they approve them |
 | Import | `croqui_import_design` | The protocol for importing an existing design |
 
 A well-behaved agent calls `croqui_context` and `croqui_ds_reference` before writing anything. That
@@ -205,7 +206,7 @@ yours.
 
 ## Skills
 
-The plugin ships five skills in the [Agent Skills](https://agentskills.io) format, so any client that
+The plugin ships six skills in the [Agent Skills](https://agentskills.io) format, so any client that
 reads `SKILL.md` folders can use them.
 
 | Skill | Use it to |
@@ -215,6 +216,7 @@ reads `SKILL.md` folders can use them.
 | [`croqui-import`](./skills/croqui-import/SKILL.md) | Bring screenshots or an existing app into a project as faithful React screens |
 | [`croqui-sync`](./skills/croqui-sync/SKILL.md) | Check a sync job's design screens against production code and report with evidence |
 | [`croqui-publish-bundle`](./skills/croqui-publish-bundle/SKILL.md) | Publish the product's local `ds-bundle/` to its project, so screens render with the real components and tokens |
+| [`croqui-taste`](./skills/croqui-taste/SKILL.md) | Distill the notes you keep repeating into personal presets you drop onto a mark instead of retyping |
 
 ## The build contract
 

@@ -53,6 +53,13 @@ Build contract: how a screen gets built on the canvas.
    A screen file composes regions and components; it is never a single component wrapping the whole
    screen.
 
+   Plan, profile or state variation (Free vs Pro, empty vs populated) is a variant axis
+   (`export const variants`, see the screen format above), never a duplicated screens/*.tsx file —
+   the variant switches in place on the same screen. Example data for a flow lives in one shared
+   module the screens of that flow import (e.g. components/data.ts, listed in components/ like any
+   other file), not reinvented per screen; screens in the same flow read the same data instead of
+   diverging copies.
+
 3. Build live, in cycles. People watch the canvas while you work, so every call should change what
    they see. One unit per call:
    a. Skeleton first, before drawing assets or building components: croqui_write_file with meta,
@@ -143,13 +150,14 @@ Build contract: how a screen gets built on the canvas.
 
 ## 6. Screen format
 
-Screen format: `screens/<group>/<screen>.tsx`, `export default function Screen({ device }: { device: "desktop" | "mobile" })` and `export const meta = { name, width, height?, background?, appear?, frames?, viewports?, props? }`. Always desktop+mobile (`viewports`; default 1440×900 / 390×844). Very different mobile: `viewports.mobile.export = "Mobile"`. Drawer/modal/sheet: named export + `meta.frames`, never an overlay on default; each export renders open and standalone and receives `device`. Exports from `viewports.*.export` don't go into `frames`. `prod` is a reserved export (Working card). Figma-style appearance is only defined by the agent (`meta.appear` / `frames[].kind` popup|menu + `frames[].appear`: instant|dissolve|move-in|slide-in|push|scale). Humans don't edit the transition. Allowed imports: `react`, `@ds` (product bundle → window[settings.bundle.global]), relative (`./`, `../`) and `https://` URLs. Any other package fails compilation. Only use Tailwind classes that exist in the compiled CSS; glue with `var(--*)` / inline style; mock content in the domain's language. Present renders in a fixed-height viewport (exact size, clipped, not stretched) — layout must carry its own internal scroll, never assume the page grows to fit content.
+Screen format: `screens/<group>/<screen>.tsx`, `export default function Screen({ device }: { device: "desktop" | "mobile" })` and `export const meta = { name, width, height?, background?, appear?, frames?, viewports?, props? }`. Always desktop+mobile (`viewports`; default 1440×900 / 390×844). Very different mobile: `viewports.mobile.export = "Mobile"`. Drawer/modal/sheet: named export + `meta.frames`, never an overlay on default; each export renders open and standalone and receives `device`. Exports from `viewports.*.export` don't go into `frames`. `prod` is a reserved export (Working card). Figma-style appearance is only defined by the agent (`meta.appear` / `frames[].kind` popup|menu + `frames[].appear`: instant|dissolve|move-in|slide-in|push|scale). Humans don't edit the transition. Allowed imports: `react`, `@ds` (product bundle → window[settings.bundle.global]), relative (`./`, `../`) and `https://` URLs. Any other package fails compilation. Only use Tailwind classes that exist in the compiled CSS; glue with `var(--*)` / inline style; mock content in the domain's language. Present renders in a fixed-height viewport (exact size, clipped, not stretched) — layout must carry its own internal scroll, never assume the page grows to fit content. Optional `export const variants = { <axis>: { options: string[] | { id, label?, props? }[], default } }` declares plan/profile/state variants for this screen — the frame reads `?v=<axis>:<option>,...`, injects `{ [axis]: optionId }` into the component plus the selected option's `props`, and the variant switches in place, never as a second screen file. Axis names `device`, `project`, `doc`, `key`, `legacy` are reserved and ignored with an error.
 
 ```tsx
 // @source apps/web/app/billing/page.tsx
 import { useState } from "react";
 import { Button } from "@ds";
 import { PlanCard } from "../../components/PlanCard";
+import { PLANS } from "../../components/data";
 
 export const meta = {
   name: "Billing",
@@ -160,13 +168,15 @@ export const meta = {
   frames: [{ export: "CancelDialog", name: "Cancel plan", kind: "popup", appear: { type: "scale" } }],
 };
 
-const PLANS = [
-  { id: "starter", name: "Starter", price: "$0" },
-  { id: "team", name: "Team", price: "$49" },
-];
+// Free/Pro/Enterprise is a variant axis, not three copies of this screen: the frame injects
+// `plan` as a prop and the render below reacts to it. Same for empty/loading/error states —
+// they are options on an axis, never a "BillingEmpty.tsx".
+export const variants = {
+  plan: { options: ["Free", "Pro", "Enterprise"], default: "Pro" },
+};
 
-export default function Billing({ device }: { device: "desktop" | "mobile" }) {
-  const [selected, setSelected] = useState("team");
+export default function Billing({ device, plan }: { device: "desktop" | "mobile"; plan: string }) {
+  const [selected, setSelected] = useState(plan);
   return (
     <main className="flex min-h-full flex-col gap-6 bg-background p-6">
       <header className="flex items-center justify-between">
@@ -174,8 +184,8 @@ export default function Billing({ device }: { device: "desktop" | "mobile" }) {
         <Button variant="ghost" data-croqui-open="CancelDialog">Cancel plan</Button>
       </header>
       <section className={device === "mobile" ? "flex flex-col gap-3" : "grid grid-cols-2 gap-4"}>
-        {PLANS.map((plan) => (
-          <PlanCard key={plan.id} {...plan} selected={selected === plan.id} onSelect={() => setSelected(plan.id)} />
+        {PLANS.map((item) => (
+          <PlanCard key={item.id} {...item} selected={selected === item.id} onSelect={() => setSelected(item.id)} />
         ))}
       </section>
     </main>
@@ -208,6 +218,10 @@ export function CancelDialog() {
 ## 8. Leave a trail
 
 - Anything that needs a human decision gets pinned: `croqui_mark_for_edit { project, path, note }`.
+  Pin it with `options`: up to 3 concrete alternatives, written as the outcome ("Stack the filters
+  above the table"), not as a question. The human picks one in the viewer and it comes back on the note
+  as `choice` with the note back on `todo` -- that pick is the brief for the next pass. No options =
+  the human has to write the answer from scratch.
 - Report in a few lines: files written, components created or reused (and which screens share them),
   what is wired in Present, what is placeholder or inferred, what needs a decision. Link
   `https://croqui.dev/?project=<id>`.
