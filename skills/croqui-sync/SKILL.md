@@ -23,12 +23,14 @@ Argument: path to the job file.
 The job file is the route's envelope plus the token:
 
 - `job_id`, `project_id`, `webhook_url`, `screens[]` with `path`, `name`, `rev`, `sha256`, `read_url`,
-  `frame_url`, `manifest`;
+  `frame_url`, `manifest`, `handoff` (the screen's TSX, its components, tokens, `croqui.json` and
+  `PROMPT.md` inline; `files: null` with `omitted: "size"` when it didn't fit);
 - `webhook_token` — the route's Bearer token. If the file does not carry it, read it from the
   `CROQUI_WEBHOOK_TOKEN` environment variable. Neither present: stop and say where to put it (the
   project's Routes dialog shows it).
 
-Design source for a screen: `croqui_read_file { project: project_id, path }` over the Croqui.dev MCP.
+Design source for a screen: `handoff.files` in the envelope; when it is null,
+`croqui_read_file { project: project_id, path }` over the Croqui.dev MCP.
 The manifest in the envelope is what you check against; the TSX helps you understand it.
 
 ## Production repository
