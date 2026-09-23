@@ -96,9 +96,10 @@ Build contract: how a screen gets built on the canvas.
    logos and illustrations included, go straight to the canvas, where people see them.
 
 8. Verify cheaply. Every write returns compile: fix a broken compile before the next call; that is the
-   per-step check. Take croqui_screenshot once, after the last pass, on the screen's own device (a
-   screen only ever has one), and fix what it shows. Never screenshot after each region or each note.
-   If croqui_screenshot is unavailable, skip the visual check and say so in the report. Report: files
+   per-step check. Run croqui_check once, after the last pass: it lays the screen out at every size
+   of its device and lists what is broken (sideways scroll, cut or overlapping text, contrast) with
+   the JSX line. Fix every error and run it again until PASS. Never check after each region or each
+   note. If croqui_check is unavailable, skip the visual check and say so in the report. Report: files
    written, components created or reused, what is wired in Present, what is placeholder or inferred.
 
 ## 5. Design bar: the screen has to look designed, not generated.
@@ -145,7 +146,7 @@ Build contract: how a screen gets built on the canvas.
 9. Legible by default. Body text at 4.5:1 contrast or better against its real background, secondary
    text still readable, nothing below 12px, no text over a busy image without a scrim.
 
-10. Look at it before you call it done. Read the screenshot as a stranger: what do you read first, is
+10. Look at it before you call it done. croqui_check has to PASS; then read its image as a stranger: what do you read first, is
     anything cut, overlapping or crowding an edge, does the screen say what it is without a caption.
     Fix that, then report.
 
@@ -238,6 +239,6 @@ export function CancelDialog() {
 | Conventions and design system | `croqui_ds_reference` |
 | Find things | `croqui_list_files`, `croqui_search`, `croqui_read_file` |
 | Write | `croqui_write_file`, `croqui_edit_file`, `croqui_write_files` (one cycle per call) |
-| Check | `croqui_inspect_screen` (structure), `croqui_screenshot` (pixels) |
+| Check | `croqui_inspect_screen` (structure), `croqui_check` (every viewport, PASS/FAIL), `croqui_screenshot` (one picture) |
 | Annotations | `croqui_read_annotations`, `croqui_resolve_annotation`, `croqui_mark_for_edit` |
 | Import a design | `croqui_import_design` (see the `croqui-import` prompt) |

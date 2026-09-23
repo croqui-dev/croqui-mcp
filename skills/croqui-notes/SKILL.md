@@ -34,8 +34,8 @@ Argument: note numbers to handle (`3`, `1 4`). No argument: every open note (`to
    5. Edit with `croqui_edit_file` (one snippet per call) or `croqui_write_file`. `compile.ok` before
       moving on.
    6. Verify at the right cost: copy, props and small style edits are covered by `compile.ok`; a note
-      that changed layout gets one `croqui_screenshot` of that screen, once, after the last note that
-      touches it.
+      that changed layout gets one `croqui_check` of that screen, once, after the last note that
+      touches it, and its errors fixed.
    7. `croqui_resolve_annotation { project, id, status: "done", reply }`. The reply is 2–4 sentences:
       what changed, which files, assumptions, anything left to a human.
 5. **Finish** with a short table: `note · what changed · open question`. No narration.
