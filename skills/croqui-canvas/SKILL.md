@@ -55,7 +55,12 @@ Build contract: how a screen gets built on the canvas.
 
    Plan, profile or state variation (Free vs Pro, empty vs populated) is a variant axis
    (`export const variants`, see the screen format above), never a duplicated screens/*.tsx file —
-   the variant switches in place on the same screen. Example data for a flow lives in one shared
+   the variant switches in place on the same screen. An axis belongs to the screen that declares it:
+   its own options, default and selection. Add `global: true` only for an axis that means the same
+   thing on every screen (plan, role): global axes with the same name share one selection across the
+   project, and every screen declaring one must use identical options and default. Changing the
+   variant remounts the screen, so `useState(propFromVariant)` starts from the new value and local
+   state resets. Example data for a flow lives in one shared
    module the screens of that flow import (e.g. components/data.ts, listed in components/ like any
    other file), not reinvented per screen; screens in the same flow read the same data instead of
    diverging copies.
@@ -75,6 +80,9 @@ Build contract: how a screen gets built on the canvas.
    data-croqui-open="<Export>"                      open a drawer/modal/sheet listed in meta.frames
    data-croqui-close                                inside that frame, close it
    data-croqui-back                                 go back to the previous screen
+   data-croqui-set="<axis>:<option>[,...]"          with goto: the target opens in that variant;
+                                                    with close: the screen under the frame switches
+                                                    to it (e.g. a "Save" in a popup shows the saved state)
    Link only to screens and frames that exist. Do not invent screens to complete a flow; leave the
    element inert and mention it in the report. The attributes only act in Present, so keep real
    onClick state as well.
@@ -146,7 +154,7 @@ Build contract: how a screen gets built on the canvas.
 
 ## 6. Screen format
 
-Screen format: `screens/<group>/<screen>.tsx`, `export default function Screen({ device }: { device: "desktop" | "mobile" })` and `export const meta = { name, device?, width, height?, background?, appear?, frames?, viewports?, props? }`. A screen is ONE device: `meta.device: "mobile"` declares mobile, absent = desktop. Never write both a desktop and a mobile version of the same screen — the mobile counterpart is a separate file (`<screen>.mobile.tsx` by convention), created only when the human asks for it. The `device` prop still reaches the component either way (it just always matches the screen's own `meta.device`). `meta.viewports.<device>.width/height` still sets a custom size for that one device; `viewports.*.export` is legacy from the paired era and is ignored. Drawer/modal/sheet: named export + `meta.frames`, never an overlay on default; each export renders open and standalone and receives `device`. `prod` is a reserved export (Working card). Figma-style appearance is only defined by the agent (`meta.appear` / `frames[].kind` popup|menu|drawer|screen + `frames[].appear`: instant|dissolve|move-in|slide-in|push|scale). `kind` picks how the frame opens over the screen: `popup` (default for a named export) centers it on a scrim, `menu` anchors it under the clicked element, `drawer` pins it to an edge (`appear.direction`: right by default) at the full length of the other axis — give the drawer its panel width in `frames[].width` and let the viewer draw the scrim, so the export renders the panel alone, no backdrop of its own; `screen` replaces the screen instead of opening over it. Humans don't edit the transition. Allowed imports: `react`, `@ds` (product bundle → window[settings.bundle.global]), relative (`./`, `../`) and `https://` URLs. Any other package fails compilation. Only use Tailwind classes that exist in the compiled CSS; glue with `var(--*)` / inline style; mock content in the domain's language. Present renders in a fixed-height viewport (exact size, clipped, not stretched) — layout must carry its own internal scroll, never assume the page grows to fit content. Optional `export const variants = { <axis>: { options: string[] | { id, label?, props? }[], default } }` declares plan/profile/state variants for this screen — the frame reads `?v=<axis>:<option>,...`, injects `{ [axis]: optionId }` into the component plus the selected option's `props`, and the variant switches in place, never as a second screen file. Axis names `device`, `project`, `doc`, `key`, `legacy` are reserved and ignored with an error.
+Screen format: `screens/<group>/<screen>.tsx`, `export default function Screen({ device }: { device: "desktop" | "mobile" })` and `export const meta = { name, device?, width, height?, background?, appear?, frames?, viewports?, props? }`. A screen is ONE device: `meta.device: "mobile"` declares mobile, absent = desktop. Never write both a desktop and a mobile version of the same screen — the mobile counterpart is a separate file (`<screen>.mobile.tsx` by convention), created only when the human asks for it. The `device` prop still reaches the component either way (it just always matches the screen's own `meta.device`). `meta.viewports.<device>.width/height` still sets a custom size for that one device; `viewports.*.export` is legacy from the paired era and is ignored. Drawer/modal/sheet: named export + `meta.frames`, never an overlay on default; each export renders open and standalone and receives `device`. `prod` is a reserved export (Working card). Figma-style appearance is only defined by the agent (`meta.appear` / `frames[].kind` popup|menu|drawer|screen + `frames[].appear`: instant|dissolve|move-in|slide-in|push|scale). `kind` picks how the frame opens over the screen: `popup` (default for a named export) centers it on a scrim, `menu` anchors it under the clicked element, `drawer` pins it to an edge (`appear.direction`: right by default) at the full length of the other axis — give the drawer its panel width in `frames[].width` and let the viewer draw the scrim, so the export renders the panel alone, no backdrop of its own; `screen` replaces the screen instead of opening over it. Humans don't edit the transition. Allowed imports: `react`, `@ds` (product bundle → window[settings.bundle.global]), relative (`./`, `../`) and `https://` URLs. Any other package fails compilation. Tailwind depends on the project's utilities mode (`croqui_context` → `utilities`): `jit` (no published bundle stylesheet) compiles any utility class live; `bundle` means only classes in the bundle's CSS exist; `off` means none. Glue anything else with `var(--*)` / inline style; mock content in the domain's language. Present renders in a fixed-height viewport (exact size, clipped, not stretched) — layout must carry its own internal scroll, never assume the page grows to fit content. Optional `export const variants = { <axis>: { options: string[] | { id, label?, props? }[], default } }` declares plan/profile/state variants for this screen — the frame reads `?v=<axis>:<option>,...`, injects `{ [axis]: optionId }` into the component plus the selected option's `props`, and the variant switches in place, never as a second screen file. Axis names `device`, `project`, `doc`, `key`, `legacy` are reserved and ignored with an error.
 
 ```tsx
 // @source apps/web/app/billing/page.tsx
@@ -172,6 +180,8 @@ export const variants = {
 };
 
 export default function Billing({ device, plan }: { device: "desktop" | "mobile"; plan: string }) {
+  // Seeding local state from a variant prop is safe: the frame remounts the screen whenever the
+  // variant selection changes, so switching `plan` in the bar resets `selected`.
   const [selected, setSelected] = useState(plan);
   return (
     <main className="flex min-h-full flex-col gap-6 bg-background p-6">
@@ -209,7 +219,13 @@ export function CancelDialog() {
   snippet instead of rewriting a large file.
 - If a screen's stage is `approved`, `delivering` or `live`, say so before editing: any change sends
   it back for approval before it can ship.
-- Deleting screens is admin-only. Never delete to "start clean".
+- Delete a screen only when asked, never to "start clean". Anyone who can write the project can delete,
+  and the answer carries the `rev` to restore from.
+- Every write is a revision and a delete keeps them all. `croqui_history { path }` lists them, deleted
+  files included; `croqui_read_file { path, rev }` shows one (it does not clear the file for a write,
+  only reading the current file does); `croqui_restore { path, rev }` writes it back as a new revision,
+  deleted screens and components included. `croqui_context.deleted` lists paths that still have
+  history: restore one instead of writing a "new" file over it.
 
 ## 8. Leave a trail
 
