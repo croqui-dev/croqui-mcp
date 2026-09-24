@@ -1,13 +1,13 @@
 ---
 name: croqui-canvas
-description: Build and edit screens on a Croqui.dev design canvas through its MCP server. Reads the project's context and design system, then writes real React screens and components in passes the team watches live, annotates and approves. Use when the user asks to design, build, change or review screens or components on Croqui.dev, or names a Croqui.dev project (product:<name>).
+description: Build and edit screens on a Croqui.dev design canvas through its MCP server. Reads the project's context and design system, then writes real React screens and components the team watches live, annotates and approves. Use when the user asks to design, build, change or review screens or components on Croqui.dev, or names a Croqui.dev project (product:<name>).
 ---
 
 # Croqui.dev canvas
 
 Croqui.dev is a collaborative design canvas: you write real React screens over MCP, humans watch them
-appear, annotate and approve, and the approved screen ships. Your writes show up on the canvas as a
-cursor and selection boxes on the frame, so the order and pace of your calls is what people see.
+appear, annotate and approve, and the approved screen ships. While you write, the canvas shows your
+presence and a working veil over the frame; how you split the writes is up to you.
 
 ## 0. Connection
 
@@ -60,17 +60,11 @@ Build contract: how a screen gets built on the canvas.
    other file), not reinvented per screen; screens in the same flow read the same data instead of
    diverging copies.
 
-3. Build live, in cycles. People watch the canvas while you work, so every call should change what
-   they see. One unit per call:
-   a. Skeleton first, before drawing assets or building components: croqui_write_file with meta
-      (device only if this screen is mobile) and the layout regions as placeholders, each marked
-      data-croqui-slot="<Region>" (<section data-croqui-slot="Pricing" ...>). Viewers see you working
-      on the first slot left.
-   b. Then one region per cycle, top to bottom: create or reuse that region's component(s) and swap
-      it in for its placeholder, data-croqui-slot included, with croqui_edit_file right away. The canvas only shows what a screen
-      renders, so never write a batch of components before wiring the first one.
-   c. States and interactions (rule 4) and Present wiring (rule 5), as further edits.
-   Do not send a finished screen in one write.
+3. Write the screen however serves it best: one full write, or a write followed by edits. The viewer
+   shows a working veil over the frame while you write, independent of the order or size of your
+   calls, so do not split a screen into artificial steps for the audience. Wire each component into
+   the screen as you create it rather than leaving it unused; states and interactions (rule 4) and
+   Present wiring (rule 5) are part of the screen, not a later pass.
 
 4. Interactive by default. Anything clickable is a <button> or <a> with cursor-pointer and visible
    hover, active and focus-visible styles. Tabs, segmented controls, toggles, accordions, selects and
@@ -96,9 +90,9 @@ Build contract: how a screen gets built on the canvas.
    logos and illustrations included, go straight to the canvas, where people see them.
 
 8. Verify cheaply. Every write returns compile: fix a broken compile before the next call; that is the
-   per-step check. Run croqui_check once, after the last pass: it lays the screen out at every size
+   per-step check. Run croqui_check once, when the screen is done: it lays the screen out at every size
    of its device and lists what is broken (sideways scroll, cut or overlapping text, contrast) with
-   the JSX line. Fix every error and run it again until PASS. Never check after each region or each
+   the JSX line. Fix every error and run it again until PASS. Never check after each edit or each
    note. If croqui_check is unavailable, skip the visual check and say so in the report. Report: files
    written, components created or reused, what is wired in Present, what is placeholder or inferred.
 
@@ -238,7 +232,7 @@ export function CancelDialog() {
 | Project state | `croqui_context`, `croqui_events`, `croqui_history` |
 | Conventions and design system | `croqui_ds_reference` |
 | Find things | `croqui_list_files`, `croqui_search`, `croqui_read_file` |
-| Write | `croqui_write_file`, `croqui_edit_file`, `croqui_write_files` (one cycle per call) |
+| Write | `croqui_write_file`, `croqui_edit_file`, `croqui_write_files` (several writes in one call) |
 | Check | `croqui_inspect_screen` (structure), `croqui_check` (every viewport, PASS/FAIL), `croqui_screenshot` (one picture) |
 | Annotations | `croqui_read_annotations`, `croqui_resolve_annotation`, `croqui_mark_for_edit` |
 | Import a design | `croqui_import_design` (see the `croqui-import` prompt) |

@@ -29,7 +29,7 @@ in order; its gates are not optional. Below are the judgment calls it leaves to 
 From the image, read the regions and their order; what repeats (cards, rows, tiles, nav items) →
 `components/`; the type scale (3–5 sizes), the palette (sample flat areas), radii and spacing rhythm;
 what is interactive and where Present should navigate. Then rebuild with flex/grid at the target
-viewport, live: skeleton first, one region at a time.
+viewport, straight on the canvas.
 
 Do not place elements by coordinates measured from the image, scale a screenshot to fill the viewport
 instead of laying it out, crop the image into base64 sprites, or run image-processing scripts to
