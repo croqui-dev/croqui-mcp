@@ -25,9 +25,8 @@ The job file is the route's envelope plus the token:
 - `job_id`, `project_id`, `webhook_url`, `screens[]` with `path`, `name`, `rev`, `sha256`, `read_url`,
   `frame_url`, `manifest`, `handoff` (the screen's TSX, its components, tokens, `croqui.json` and
   `PROMPT.md` inline; `files: null` with `omitted: "size"` when it didn't fit);
-- `webhook_token` — the route's Bearer token. If the file does not carry it, read it from the
-  `CROQUI_WEBHOOK_TOKEN` environment variable. Neither present: stop and say where to put it (the
-  project's Routes dialog shows it).
+- `webhook_token` — the route's Bearer token. Missing from the file: stop and say the receiver
+  must write it into the job (the project's Routes dialog shows it).
 
 Design source for a screen: `handoff.files` in the envelope; when it is null,
 `croqui_read_file { project: project_id, path }` over the Croqui.dev MCP.
@@ -99,7 +98,7 @@ environment inside the same command, and send bodies from a file.
 
 ```bash
 WEBHOOK_URL=$(jq -r .webhook_url "$JOB")
-WEBHOOK_TOKEN=${CROQUI_WEBHOOK_TOKEN:-$(jq -r '.webhook_token // empty' "$JOB")} \
+WEBHOOK_TOKEN=$(jq -r '.webhook_token // empty' "$JOB") \
   sh -c 'curl -sS -X POST -H "Authorization: Bearer $WEBHOOK_TOKEN" -H "Content-Type: application/json" \
     -d @result.json "$0"' "$WEBHOOK_URL"
 ```

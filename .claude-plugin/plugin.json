@@ -8,5 +8,8 @@
   },
   "homepage": "https://croqui.dev/docs",
   "repository": "https://github.com/croqui-dev/croqui-mcp",
+  "license": "MIT",
+  "icon": "./.claude-plugin/icon.svg",
+  "privacyPolicyUrl": "https://croqui.dev/privacy",
   "keywords": ["croqui", "design", "canvas", "mcp", "react", "ui", "prototype", "design-system", "annotations"]
 }
