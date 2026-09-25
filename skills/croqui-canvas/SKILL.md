@@ -32,7 +32,8 @@ it before creating anything.
   publishes one, or its repo has a `ds-bundle/` folder — starts WITH that system, never without:
   `croqui_create_project { id, name, bundleFrom: "<project with the bundle>" }` copies it server side
   (nothing goes through the chat); for an existing project, `croqui_copy_bundle { project, from }`.
-  Only a repo bundle no project has yet goes through `croqui_publish_bundle`.
+  Only a repo bundle no project has yet goes through `croqui_publish_bundle { project }` without files:
+  it returns an upload link you feed the folder to with tar + curl.
 
 ## 3. Read before writing (once per session)
 

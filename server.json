@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "dev.croqui/croqui",
   "description": "Croqui.dev — a collaborative design canvas where AI agents write real React screens over MCP.",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "websiteUrl": "https://croqui.dev",
   "remotes": [
     {

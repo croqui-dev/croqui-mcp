@@ -6,12 +6,15 @@ description: Publish a product's local design-system bundle (the ds-bundle/ fold
 # Publish a local design system to Croqui.dev
 
 Croqui.dev runs on a server. It cannot read the user's machine. When a product's design system lives in
-the repo — the generated `ds-bundle/` folder — this skill is the bridge: you read the folder with your
-own file tools and hand the files to `croqui_publish_bundle`, which assembles and stores them.
+the repo — the generated `ds-bundle/` folder — this skill is the bridge: `croqui_publish_bundle`
+hands you a single-use upload link, and you send the folder to it from the shell with tar + curl. The
+bundle is a megabyte of JS: never paste it into a tool call.
 
-You do the reading. The server does the assembling. Do not try to inline CSS, resolve `@import`s,
-concatenate files or decide what the bundle's global is — that is the tool's job, and doing it by hand
-is how a stylesheet silently loses a layer.
+You send the folder. The server does the assembling. Do not inline CSS, resolve `@import`s,
+concatenate files or decide what the bundle's global is — that is the tool's job.
+
+If another project on the canvas already publishes this product's bundle, you don't need the repo at
+all: `croqui_copy_bundle { project, from }`.
 
 ## What a bundle is
 
@@ -35,29 +38,17 @@ build step). Do not improvise a bundle out of `src/components`.
 1. **Find the folder.** `ds-bundle/` at the repo root unless the user names another. Confirm
    `_ds_bundle.js` and `styles.css` are in it.
 
-2. **Collect the files.** Glob the folder. Include every `.css` reachable from `styles.css` — read it,
-   look at its `@import` lines, and follow them, including nested ones. A missing import is an error
-   from the tool, not a warning, so it is cheaper to send one file too many than one too few.
+2. **Get the link.** `croqui_publish_bundle { project }` with no `files`. It returns `upload` (valid
+   15 minutes, one use) and `run`, the exact command.
 
-3. **Read them as text.** Every file goes up as utf-8 text. Skip binaries (fonts, images): they are not
-   part of the bundle contract, and a font referenced by URL keeps working.
+3. **Send the folder.** Run `run` with `<path to ds-bundle>` filled in. It tars the folder minus
+   screenshots and previews and PUTs it; the response is the publish result. No `tar`? A zip of the
+   folder works too (`Content-Type: application/zip`). Don't echo the upload URL to the user.
+   Only a client with no shell sends the files inline (`files: [{ path, content }]`, paths relative to
+   the folder, every `.css` reachable from `styles.css` included).
 
-4. **Publish.** One call, with paths relative to the bundle folder:
-
-   ```
-   croqui_publish_bundle({
-     project: "product:<name>",
-     files: [
-       { path: "_ds_bundle.js", content: "…" },
-       { path: "styles.css", content: "…" },
-       { path: "tokens.css", content: "…" },
-       { path: "components/forms/Button/Button.d.ts", content: "…" }
-     ]
-   })
-   ```
-
-   Pass `global` only when the tool asks for it — normally it reads it from the `@ds-bundle` header or
-   `.stories-map.json`.
+4. **Global.** Pass `global` to step 2 only when the result asks for it — normally it is read from the
+   `@ds-bundle` header or `.stories-map.json`.
 
 5. **Report what moved.** The result has `uploaded` and `skipped` (unchanged files, matched by hash)
    and the component count. Say how many components the project now has, and name the global. A publish
