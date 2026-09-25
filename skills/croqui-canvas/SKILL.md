@@ -28,6 +28,11 @@ it before creating anything.
 - No match and the user wants a new one: `croqui_create_project { id, name, organizationId }`. With
   more than one team, ask which one first — a project in the wrong team is invisible to the people who
   need it.
+- A new project for a product that already has a design system — another project of it on the canvas
+  publishes one, or its repo has a `ds-bundle/` folder — starts WITH that system, never without:
+  `croqui_create_project { id, name, bundleFrom: "<project with the bundle>" }` copies it server side
+  (nothing goes through the chat); for an existing project, `croqui_copy_bundle { project, from }`.
+  Only a repo bundle no project has yet goes through `croqui_publish_bundle`.
 
 ## 3. Read before writing (once per session)
 
@@ -35,6 +40,9 @@ it before creating anything.
    references, open annotations, each screen's review stage.
 2. `croqui_ds_reference { project }` — screen format, build contract, design bar, design system. For
    the components you plan to use, one call: `croqui_ds_reference { project, components: "Button,Card" }`.
+   It says "no bundle" and lists projects that have one, or the repo has `ds-bundle/`: bring that
+   system in (step 2) before the first write. Rebuilding a product's components by hand in Tailwind
+   when its bundle exists is a failed pass, however good it looks.
 3. When the product's repository is at hand, read the real page you are designing (routes, copy, data
    shape). The canvas is where the design lives; never edit the product repo from here.
 
@@ -244,11 +252,12 @@ export function CancelDialog() {
 | Need | Tool |
 | --- | --- |
 | Who am I, teams, limits | `croqui_status` |
-| Projects | `croqui_list_projects`, `croqui_create_project` |
+| Projects | `croqui_list_projects`, `croqui_create_project`, `croqui_copy_bundle` |
 | Project state | `croqui_context`, `croqui_events`, `croqui_history` |
 | Conventions and design system | `croqui_ds_reference` |
 | Find things | `croqui_list_files`, `croqui_search`, `croqui_read_file` |
 | Write | `croqui_write_file`, `croqui_edit_file`, `croqui_write_files` (several writes in one call) |
 | Check | `croqui_inspect_screen` (structure), `croqui_check` (every viewport, PASS/FAIL), `croqui_screenshot` (one picture) |
+| A human says the screen shows an error | `croqui_events { project, kind: "frame.error" }`: the exact text their viewer showed. Never answer "it renders fine here" |
 | Annotations | `croqui_read_annotations`, `croqui_resolve_annotation`, `croqui_mark_for_edit` |
 | Import a design | `croqui_import_design` (see the `croqui-import` prompt) |
