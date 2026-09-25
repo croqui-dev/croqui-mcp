@@ -42,7 +42,7 @@ build step). Do not improvise a bundle out of `src/components`.
    15 minutes, one use) and `run`, the exact command.
 
 3. **Send the folder.** Run `run` with `<path to ds-bundle>` filled in. It tars the folder minus
-   screenshots and previews and PUTs it; the response is the publish result. No `tar`? A zip of the
+   screenshots and vendored React (the _preview stories go: they become the canvas's DS catalog) and PUTs it; the response is the publish result. No `tar`? A zip of the
    folder works too (`Content-Type: application/zip`). Don't echo the upload URL to the user.
    Only a client with no shell sends the files inline (`files: [{ path, content }]`, paths relative to
    the folder, every `.css` reachable from `styles.css` included).
