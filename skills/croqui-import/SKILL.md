@@ -23,6 +23,9 @@ in order; its gates are not optional. Below are the judgment calls it leaves to 
 - **Pass 2 is what the user asked for**, after they have seen pass 1. Asked for both at once ("like
   this, but dark")? Deliver them as two writes, in that order.
 - The design system wins over a pixel match: when `@ds` has the component the image shows, use it.
+- A project with no design system takes no screens: before pass 1, bring the product's bundle, or build
+  the canvas one under `ds/` from the source images (they are the user's references) — the tokens and
+  the components that repeat. The protocol's project step says how.
 
 ## 3. Read structure, not pixels
 
